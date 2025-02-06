@@ -1,8 +1,12 @@
-import json
+import schedule
+import time
 
-def handler(event, context):
-    print("Hello, Netlify Scheduled Functions!")
-    return {
-        'statusCode': 200,
-        'body': json.dumps('Hello, world!')
-    }
+def job():
+    print("Hello, this job runs every minute.")
+
+# Schedule the job every minute
+schedule.every(1).minutes.do(job)
+
+while True:
+    schedule.run_pending()
+    time.sleep(1)
