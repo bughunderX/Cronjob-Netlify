@@ -1,0 +1,6 @@
+[functions]
+directory = "netlify/functions"
+
+[[functions.schedule]]
+path = "hello"
+cron = "* * * * *"  # This cron expression runs the function at the top of every hour
