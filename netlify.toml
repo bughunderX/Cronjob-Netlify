@@ -1,6 +1,6 @@
 [functions]
   directory = "netlify/functions"
 
-[[functions]]
+[[scheduled]]
   path = "hello"
-  schedule = "* * * * *"  # This cron expression runs the function every minute
+  schedule = "* * * * *"  # Runs every minute
