@@ -2,7 +2,8 @@ exports.handler = async function (event, context) {
   console.log("Checking URL redirects...");
 
   const urlList = [
-    "https://www.fromjapan.co.jp/japan/en/special/order/confirm/kanteidan:10002352/2_1/"
+    "https://www.fromjapan.co.jp/japan/en/special/order/confirm/kanteidan:10002352/2_1/",
+    "https://www.fromjapan.co.jp/japan/en/special/order/confirm/kanteidan:10002804/2_1/"
   ];
 
   async function checkRedirect(url) {
