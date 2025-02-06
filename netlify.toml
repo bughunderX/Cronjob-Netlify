@@ -3,4 +3,4 @@
 
 [[scheduled]]
   path = "hello"
-  schedule = "0 0 * * *"  # Runs every minute
+  schedule = "* * * * *"  # Runs every minute
