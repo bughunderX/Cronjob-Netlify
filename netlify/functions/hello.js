@@ -1,6 +1,5 @@
 const { google } = require("googleapis");
 const { JWT } = require("google-auth-library");
-const fetch = require("node-fetch");
 const { URL } = require("url");
 
 // Google Sheets setup
