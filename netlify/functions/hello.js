@@ -1,121 +1,71 @@
-const { google } = require("googleapis");
-const { JWT } = require("google-auth-library");
-const { URL } = require("url");
-
-// Google Sheets setup
-const SCOPES = ["https://www.googleapis.com/auth/spreadsheets"];
-const SHEET_ID = "1-WUulbDfcim9IaB1K9ANLvoAj8NFvscKScrYzOp3nyk";
-
-const privateKey = process.env.PRIVATE_KEY.replace(/\\n/g, "\n");
-const auth = new JWT({
-  email: process.env.CLIENT_EMAIL,
-  key: privateKey,
-  scopes: SCOPES,
-});
-
-const sheets = google.sheets({ version: "v4", auth });
-
-const redColor = { red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0 };
-const yellowColor = { red: 1.0, green: 1.0, blue: 0.0, alpha: 1.0 };
-
 exports.handler = async function (event, context) {
+  console.log("Checking URL redirect...");
+
+  // Only allow POST requests
+  if (event.httpMethod !== "POST") {
+    return {
+      statusCode: 405,
+      body: JSON.stringify({ error: "Method Not Allowed" })
+    };
+  }
+
   try {
-    const spreadsheet = await sheets.spreadsheets.get({ spreadsheetId: SHEET_ID });
-    const sheetInfos = spreadsheet.data.sheets;
+    const { url } = JSON.parse(event.body); // Extract a single URL from the request body
 
-    for (let s = 4; s < Math.min(sheetInfos.length, 16); s++) {
-      const sheetInfo = sheetInfos[s];
-      const sheetId = sheetInfo.properties.sheetId;
-      const sheetName = sheetInfo.properties.title;
-
-      const range = `${sheetName}!A1:A`;
-      const result = await sheets.spreadsheets.values.get({
-        spreadsheetId: SHEET_ID,
-        range,
-      });
-
-      const rows = result.data.values || [];
-      const requests = [];
-
-      for (let i = 0; i < rows.length; i++) {
-        const url = rows[i][0];
-        if (!isValidUrl(url)) {
-          requests.push(setCellColor(sheetId, i, yellowColor));
-        } else {
-          const redirected = await isRedirect(url);
-          if (redirected) {
-            console.log('Redirected' + url);
-            requests.push(setCellColor(sheetId, i, redColor));
-          }
-        }
-      }
-
-      if (requests.length > 0) {
-        await sheets.spreadsheets.batchUpdate({
-          spreadsheetId: SHEET_ID,
-          requestBody: { requests },
-        });
-      }
-      break;
+    if (!url || typeof url !== "string") {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: "Invalid input. 'url' must be a valid string." })
+      };
     }
+
+    async function checkRedirect(url) {
+      try {
+        const response = await fetch(url, {
+          method: "GET",
+          redirect: "manual",
+          headers: {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept-Language": "en-US,en;q=0.5",
+            "Connection": "keep-alive"
+          }
+        });
+
+        if (response.status >= 300 && response.status < 400) {
+          const redirectUrl = response.headers.get("Location");
+          return {
+            url,
+            redirect: true,
+            redirectUrl: redirectUrl || "Redirect detected but 'Location' header is missing."
+          };
+        } else {
+          return {
+            url,
+            redirect: false,
+            statusCode: response.status
+          };
+        }
+      } catch (error) {
+        return {
+          url,
+          error: error.message
+        };
+      }
+    }
+
+    const result = await checkRedirect(url);
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: "Sheets checked and formatted!" }),
+      body: JSON.stringify(result)
     };
-  } catch (err) {
-    console.error(err);
+
+  } catch (error) {
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: err.message }),
+      body: JSON.stringify({ error: "Internal Server Error", details: error.message })
     };
   }
 };
-
-function isValidUrl(url) {
-  try {
-    const parsed = new URL(url);
-    return !!parsed.hostname;
-  } catch {
-    return false;
-  }
-}
-
-async function isRedirect(url) {
-  try {
-    const res = await fetch(url, {
-      method: "GET",
-      redirect: "manual",
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-      },
-    });
-    console.log(url);
-    console.log(res.status);
-    return res.status >= 300 && res.status < 400;
-  } catch (err) {
-    console.warn(`Error checking URL ${url}:`, err.message);
-    return false;
-  }
-}
-
-function setCellColor(sheetId, rowIndex, color) {
-  return {
-    repeatCell: {
-      range: {
-        sheetId,
-        startRowIndex: rowIndex,
-        endRowIndex: rowIndex + 1,
-        startColumnIndex: 0,
-        endColumnIndex: 1,
-      },
-      cell: {
-        userEnteredFormat: {
-          backgroundColor: color,
-        },
-      },
-      fields: "userEnteredFormat.backgroundColor",
-    },
-  };
-}
