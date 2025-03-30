@@ -1,0 +1,12 @@
+{
+    "name": "check-url-redirect",
+    "version": "1.0.0",
+    "main": "netlify/functions/checkUrls.js",
+    "dependencies": {
+      "googleapis": "^130.0.0",
+      "google-auth-library": "^9.0.0",
+      "node-fetch": "^3.3.2"
+    },
+    "type": "module"
+  }
+  
