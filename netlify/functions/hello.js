@@ -24,7 +24,7 @@ exports.handler = async function (event, context) {
     const spreadsheet = await sheets.spreadsheets.get({ spreadsheetId: SHEET_ID });
     const sheetInfos = spreadsheet.data.sheets;
 
-    for (let s = 0; s < Math.min(sheetInfos.length, 16); s++) {
+    for (let s = 4; s < Math.min(sheetInfos.length, 16); s++) {
       const sheetInfo = sheetInfos[s];
       const sheetId = sheetInfo.properties.sheetId;
       const sheetName = sheetInfo.properties.title;
@@ -45,6 +45,7 @@ exports.handler = async function (event, context) {
         } else {
           const redirected = await isRedirect(url);
           if (redirected) {
+            console.log('Redirected' + url);
             requests.push(setCellColor(sheetId, i, redColor));
           }
         }
@@ -56,6 +57,7 @@ exports.handler = async function (event, context) {
           requestBody: { requests },
         });
       }
+      break;
     }
 
     return {
@@ -90,6 +92,8 @@ async function isRedirect(url) {
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
       },
     });
+    console.log(url);
+    console.log(res.status);
     return res.status >= 300 && res.status < 400;
   } catch (err) {
     console.warn(`Error checking URL ${url}:`, err.message);
