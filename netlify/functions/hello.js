@@ -7,8 +7,6 @@ const { URL } = require("url");
 const SCOPES = ["https://www.googleapis.com/auth/spreadsheets"];
 const SHEET_ID = "1-WUulbDfcim9IaB1K9ANLvoAj8NFvscKScrYzOp3nyk";
 
-// Service account credentials from environment variable
-const serviceAccount = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
 
 const auth = new JWT({
   email: process.env.CLIENT_EMAIL,
