@@ -7,10 +7,10 @@ const { URL } = require("url");
 const SCOPES = ["https://www.googleapis.com/auth/spreadsheets"];
 const SHEET_ID = "1-WUulbDfcim9IaB1K9ANLvoAj8NFvscKScrYzOp3nyk";
 
-
+const privateKey = process.env.PRIVATE_KEY.replace(/\\n/g, "\n");
 const auth = new JWT({
   email: process.env.CLIENT_EMAIL,
-  key: process.env.PRIVATE_KEY,
+  key: privateKey,
   scopes: SCOPES,
 });
 
